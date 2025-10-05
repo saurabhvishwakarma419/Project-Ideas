@@ -1,1 +1,349 @@
+import React, { useState, useEffect } from 'react';
+import { Twitter, Facebook, Instagram, Linkedin, Youtube, TrendingUp, Users, Heart, MessageCircle, Share2, Eye, ThumbsUp, BarChart3, Calendar, RefreshCw } from 'lucide-react';
 
+export default function SocialMediaDashboard() {
+  const [selectedPlatform, setSelectedPlatform] = useState('all');
+  const [posts, setPosts] = useState([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [dateFilter, setDateFilter] = useState('7days');
+
+  const platforms = [
+    { id: 'all', name: 'All Platforms', icon: BarChart3, color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
+    { id: 'twitter', name: 'Twitter', icon: Twitter, color: 'bg-blue-400' },
+    { id: 'facebook', name: 'Facebook', icon: Facebook, color: 'bg-blue-600' },
+    { id: 'instagram', name: 'Instagram', icon: Instagram, color: 'bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500' },
+    { id: 'linkedin', name: 'LinkedIn', icon: Linkedin, color: 'bg-blue-700' },
+    { id: 'youtube', name: 'YouTube', icon: Youtube, color: 'bg-red-600' },
+  ];
+
+  const generateMockPosts = () => {
+    const mockData = [
+      {
+        id: 1,
+        platform: 'twitter',
+        content: 'Just launched our new product feature! Check it out 🚀',
+        author: 'TechCorp',
+        avatar: '🏢',
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        likes: 1247,
+        comments: 89,
+        shares: 156,
+        views: 12450,
+      },
+      {
+        id: 2,
+        platform: 'instagram',
+        content: 'Behind the scenes at our office today! #WorkLife #TeamWork',
+        author: 'TechCorp',
+        avatar: '🏢',
+        timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
+        likes: 3521,
+        comments: 234,
+        shares: 89,
+        views: 25600,
+        image: true,
+      },
+      {
+        id: 3,
+        platform: 'linkedin',
+        content: 'Excited to announce our Q4 results. Growth continues! Read more about our journey in the latest blog post.',
+        author: 'TechCorp',
+        avatar: '🏢',
+        timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        likes: 892,
+        comments: 67,
+        shares: 145,
+        views: 8900,
+      },
+      {
+        id: 4,
+        platform: 'facebook',
+        content: 'Join us for our upcoming webinar on digital transformation! Limited seats available.',
+        author: 'TechCorp',
+        avatar: '🏢',
+        timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
+        likes: 567,
+        comments: 43,
+        shares: 234,
+        views: 15300,
+      },
+      {
+        id: 5,
+        platform: 'youtube',
+        content: 'New Tutorial: How to master productivity in 2025',
+        author: 'TechCorp',
+        avatar: '🏢',
+        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        likes: 4523,
+        comments: 312,
+        shares: 445,
+        views: 45230,
+        video: true,
+      },
+      {
+        id: 6,
+        platform: 'twitter',
+        content: 'Celebrating 10 years of innovation! Thank you to our amazing community 💙',
+        author: 'TechCorp',
+        avatar: '🏢',
+        timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
+        likes: 2156,
+        comments: 178,
+        shares: 423,
+        views: 28900,
+      },
+      {
+        id: 7,
+        platform: 'instagram',
+        content: 'Customer spotlight: Meet Sarah, who transformed her business using our platform! 🌟',
+        author: 'TechCorp',
+        avatar: '🏢',
+        timestamp: new Date(Date.now() - 18 * 60 * 60 * 1000),
+        likes: 2890,
+        comments: 156,
+        shares: 78,
+        views: 19800,
+        image: true,
+      },
+      {
+        id: 8,
+        platform: 'linkedin',
+        content: 'We are hiring! Join our team of innovators. Multiple positions open across engineering, design, and marketing.',
+        author: 'TechCorp',
+        avatar: '🏢',
+        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        likes: 1234,
+        comments: 201,
+        shares: 567,
+        views: 34500,
+      },
+    ];
+
+    return mockData;
+  };
+
+  useEffect(() => {
+    setPosts(generateMockPosts());
+  }, []);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setPosts(generateMockPosts());
+      setIsRefreshing(false);
+    }, 1000);
+  };
+
+  const getFilteredPosts = () => {
+    return selectedPlatform === 'all' 
+      ? posts 
+      : posts.filter(post => post.platform === selectedPlatform);
+  };
+
+  const getTotalStats = () => {
+    const filtered = getFilteredPosts();
+    return {
+      totalPosts: filtered.length,
+      totalLikes: filtered.reduce((sum, post) => sum + post.likes, 0),
+      totalComments: filtered.reduce((sum, post) => sum + post.comments, 0),
+      totalShares: filtered.reduce((sum, post) => sum + post.shares, 0),
+      totalViews: filtered.reduce((sum, post) => sum + post.views, 0),
+    };
+  };
+
+  const stats = getTotalStats();
+
+  const formatNumber = (num) => {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
+  };
+
+  const getTimeAgo = (date) => {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    const intervals = {
+      year: 31536000,
+      month: 2592000,
+      week: 604800,
+      day: 86400,
+      hour: 3600,
+      minute: 60,
+    };
+
+    for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+      const interval = Math.floor(seconds / secondsInUnit);
+      if (interval >= 1) {
+        return `${interval} ${unit}${interval === 1 ? '' : 's'} ago`;
+      }
+    }
+    return 'Just now';
+  };
+
+  const getPlatformIcon = (platformId) => {
+    const platform = platforms.find(p => p.id === platformId);
+    if (!platform) return null;
+    const Icon = platform.icon;
+    return <Icon className="w-5 h-5" />;
+  };
+
+  const getPlatformColor = (platformId) => {
+    const platform = platforms.find(p => p.id === platformId);
+    return platform ? platform.color : 'bg-gray-500';
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-2">Social Media Dashboard</h1>
+              <p className="text-gray-300">Aggregate view of all your social media content</p>
+            </div>
+            <button
+              onClick={handleRefresh}
+              className={`flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-all ${isRefreshing ? 'animate-pulse' : ''}`}
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
+              <div className="flex items-center gap-2 text-purple-300 mb-2">
+                <BarChart3 className="w-4 h-4" />
+                <span className="text-sm font-medium">Posts</span>
+              </div>
+              <p className="text-2xl font-bold text-white">{stats.totalPosts}</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
+              <div className="flex items-center gap-2 text-pink-300 mb-2">
+                <Heart className="w-4 h-4" />
+                <span className="text-sm font-medium">Likes</span>
+              </div>
+              <p className="text-2xl font-bold text-white">{formatNumber(stats.totalLikes)}</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
+              <div className="flex items-center gap-2 text-blue-300 mb-2">
+                <MessageCircle className="w-4 h-4" />
+                <span className="text-sm font-medium">Comments</span>
+              </div>
+              <p className="text-2xl font-bold text-white">{formatNumber(stats.totalComments)}</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
+              <div className="flex items-center gap-2 text-green-300 mb-2">
+                <Share2 className="w-4 h-4" />
+                <span className="text-sm font-medium">Shares</span>
+              </div>
+              <p className="text-2xl font-bold text-white">{formatNumber(stats.totalShares)}</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
+              <div className="flex items-center gap-2 text-yellow-300 mb-2">
+                <Eye className="w-4 h-4" />
+                <span className="text-sm font-medium">Views</span>
+              </div>
+              <p className="text-2xl font-bold text-white">{formatNumber(stats.totalViews)}</p>
+            </div>
+          </div>
+
+          {/* Platform Filter */}
+          <div className="flex flex-wrap gap-3">
+            {platforms.map(platform => {
+              const Icon = platform.icon;
+              return (
+                <button
+                  key={platform.id}
+                  onClick={() => setSelectedPlatform(platform.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                    selectedPlatform === platform.id
+                      ? `${platform.color} text-white shadow-lg scale-105`
+                      : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="font-medium">{platform.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Posts Feed */}
+        <div className="space-y-4">
+          {getFilteredPosts().map(post => (
+            <div
+              key={post.id}
+              className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all"
+            >
+              {/* Post Header */}
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="text-3xl">{post.avatar}</div>
+                  <div>
+                    <h3 className="text-white font-semibold">{post.author}</h3>
+                    <div className="flex items-center gap-2 text-sm text-gray-400">
+                      <div className={`flex items-center gap-1 ${getPlatformColor(post.platform)} px-2 py-1 rounded-md text-white`}>
+                        {getPlatformIcon(post.platform)}
+                        <span className="capitalize">{post.platform}</span>
+                      </div>
+                      <span>•</span>
+                      <span>{getTimeAgo(post.timestamp)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Post Content */}
+              <p className="text-white mb-4 text-lg">{post.content}</p>
+
+              {/* Media Placeholder */}
+              {post.image && (
+                <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg h-64 mb-4 flex items-center justify-center border border-white/10">
+                  <Instagram className="w-16 h-16 text-white/30" />
+                </div>
+              )}
+              {post.video && (
+                <div className="bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-lg h-64 mb-4 flex items-center justify-center border border-white/10">
+                  <Youtube className="w-16 h-16 text-white/30" />
+                </div>
+              )}
+
+              {/* Engagement Stats */}
+              <div className="flex items-center gap-6 text-gray-300">
+                <div className="flex items-center gap-2">
+                  <Heart className="w-5 h-5 text-pink-400" />
+                  <span className="font-medium">{formatNumber(post.likes)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5 text-blue-400" />
+                  <span className="font-medium">{formatNumber(post.comments)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Share2 className="w-5 h-5 text-green-400" />
+                  <span className="font-medium">{formatNumber(post.shares)}</span>
+                </div>
+                <div className="flex items-center gap-2 ml-auto">
+                  <Eye className="w-5 h-5 text-yellow-400" />
+                  <span className="font-medium">{formatNumber(post.views)} views</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {getFilteredPosts().length === 0 && (
+          <div className="text-center py-16">
+            <div className="text-white/50 mb-4">
+              <BarChart3 className="w-16 h-16 mx-auto mb-4" />
+              <p className="text-xl">No posts found</p>
+              <p className="text-sm">Try selecting a different platform filter</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
