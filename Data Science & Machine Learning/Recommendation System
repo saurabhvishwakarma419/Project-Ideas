@@ -1,1 +1,456 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import { Star, ThumbsUp, ThumbsDown, Heart, ShoppingCart, Play, BookOpen, TrendingUp, Users, Sparkles, Filter, X } from 'lucide-react';
 
+const RecommendationSystem = () => {
+  const [activeTab, setActiveTab] = useState('movies');
+  const [userProfile, setUserProfile] = useState({
+    movies: { genres: ['Action', 'Sci-Fi'], ratings: {}, watched: [] },
+    products: { categories: ['Electronics', 'Books'], purchases: [], likes: {} },
+    articles: { topics: ['Technology', 'Science'], reads: [], interests: {} }
+  });
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [recommendationMethod, setRecommendationMethod] = useState('collaborative');
+
+  // Complete dataset
+  const dataset = {
+    movies: [
+      { id: 1, title: 'Interstellar', genre: 'Sci-Fi', rating: 4.8, year: 2014, director: 'Christopher Nolan', tags: ['Space', 'Time Travel', 'Drama'], popularity: 95, image: '🌌' },
+      { id: 2, title: 'The Dark Knight', genre: 'Action', rating: 4.9, year: 2008, director: 'Christopher Nolan', tags: ['Superhero', 'Crime', 'Thriller'], popularity: 98, image: '🦇' },
+      { id: 3, title: 'Inception', genre: 'Sci-Fi', rating: 4.8, year: 2010, director: 'Christopher Nolan', tags: ['Mind-Bending', 'Heist', 'Dreams'], popularity: 96, image: '💭' },
+      { id: 4, title: 'The Shawshank Redemption', genre: 'Drama', rating: 4.9, year: 1994, director: 'Frank Darabont', tags: ['Prison', 'Hope', 'Friendship'], popularity: 99, image: '🔗' },
+      { id: 5, title: 'Pulp Fiction', genre: 'Crime', rating: 4.7, year: 1994, director: 'Quentin Tarantino', tags: ['Non-linear', 'Dark Comedy'], popularity: 94, image: '🎬' },
+      { id: 6, title: 'The Matrix', genre: 'Sci-Fi', rating: 4.7, year: 1999, director: 'Wachowski', tags: ['Cyberpunk', 'Action', 'Philosophy'], popularity: 93, image: '🕶️' },
+      { id: 7, title: 'Forrest Gump', genre: 'Drama', rating: 4.8, year: 1994, director: 'Robert Zemeckis', tags: ['Life', 'History', 'Inspirational'], popularity: 92, image: '🏃' },
+      { id: 8, title: 'Mad Max: Fury Road', genre: 'Action', rating: 4.6, year: 2015, director: 'George Miller', tags: ['Post-Apocalyptic', 'Chase', 'Visuals'], popularity: 88, image: '🚗' },
+      { id: 9, title: 'Blade Runner 2049', genre: 'Sci-Fi', rating: 4.5, year: 2017, director: 'Denis Villeneuve', tags: ['Cyberpunk', 'Mystery', 'Visuals'], popularity: 85, image: '🌆' },
+      { id: 10, title: 'The Godfather', genre: 'Crime', rating: 4.9, year: 1972, director: 'Francis Ford Coppola', tags: ['Mafia', 'Family', 'Classic'], popularity: 100, image: '👔' },
+    ],
+    products: [
+      { id: 1, name: 'Wireless Headphones Pro', category: 'Electronics', price: 299, rating: 4.5, reviews: 1250, tags: ['Audio', 'Bluetooth', 'Premium'], popularity: 92, image: '🎧' },
+      { id: 2, name: 'Smart Watch Ultra', category: 'Electronics', price: 399, rating: 4.6, reviews: 890, tags: ['Fitness', 'Smart', 'Wearable'], popularity: 88, image: '⌚' },
+      { id: 3, name: 'The Art of Programming', category: 'Books', price: 45, rating: 4.8, reviews: 2100, tags: ['Tech', 'Learning', 'Reference'], popularity: 95, image: '📚' },
+      { id: 4, name: 'Mechanical Keyboard RGB', category: 'Electronics', price: 159, rating: 4.7, reviews: 1580, tags: ['Gaming', 'Typing', 'RGB'], popularity: 90, image: '⌨️' },
+      { id: 5, name: 'Running Shoes Elite', category: 'Sports', price: 129, rating: 4.4, reviews: 950, tags: ['Running', 'Comfort', 'Performance'], popularity: 85, image: '👟' },
+      { id: 6, name: '4K Webcam Pro', category: 'Electronics', price: 179, rating: 4.5, reviews: 670, tags: ['Streaming', 'Video', '4K'], popularity: 82, image: '📹' },
+      { id: 7, name: 'Coffee Table Book: Design', category: 'Books', price: 55, rating: 4.6, reviews: 450, tags: ['Art', 'Design', 'Inspiration'], popularity: 78, image: '📖' },
+      { id: 8, name: 'Portable Power Bank', category: 'Electronics', price: 79, rating: 4.3, reviews: 1820, tags: ['Battery', 'Portable', 'Fast-Charge'], popularity: 87, image: '🔋' },
+      { id: 9, name: 'Yoga Mat Premium', category: 'Sports', price: 89, rating: 4.7, reviews: 1120, tags: ['Yoga', 'Fitness', 'Eco-Friendly'], popularity: 83, image: '🧘' },
+      { id: 10, name: 'Cookbook: Healthy Living', category: 'Books', price: 32, rating: 4.5, reviews: 780, tags: ['Food', 'Health', 'Recipes'], popularity: 80, image: '🍳' },
+    ],
+    articles: [
+      { id: 1, title: 'The Future of AI in Healthcare', topic: 'Technology', readTime: 8, views: 15000, tags: ['AI', 'Healthcare', 'Innovation'], date: '2024-10-10', popularity: 94, image: '🤖' },
+      { id: 2, title: 'Quantum Computing Breakthrough', topic: 'Science', readTime: 12, views: 22000, tags: ['Quantum', 'Computing', 'Physics'], date: '2024-10-12', popularity: 96, image: '⚛️' },
+      { id: 3, title: 'Sustainable Energy Solutions', topic: 'Environment', readTime: 10, views: 18000, tags: ['Solar', 'Wind', 'Climate'], date: '2024-10-08', popularity: 90, image: '🌱' },
+      { id: 4, title: 'Machine Learning for Beginners', topic: 'Technology', readTime: 15, views: 35000, tags: ['ML', 'Tutorial', 'Programming'], date: '2024-10-05', popularity: 98, image: '💻' },
+      { id: 5, title: 'Space Exploration: Mars Mission', topic: 'Science', readTime: 9, views: 28000, tags: ['Space', 'Mars', 'NASA'], date: '2024-10-11', popularity: 95, image: '🚀' },
+      { id: 6, title: 'Cybersecurity Best Practices', topic: 'Technology', readTime: 7, views: 12000, tags: ['Security', 'Privacy', 'Tips'], date: '2024-10-09', popularity: 88, image: '🔒' },
+      { id: 7, title: 'Climate Change Impact Study', topic: 'Environment', readTime: 11, views: 16000, tags: ['Climate', 'Research', 'Data'], date: '2024-10-07', popularity: 89, image: '🌍' },
+      { id: 8, title: 'Neural Networks Explained', topic: 'Technology', readTime: 13, views: 20000, tags: ['AI', 'Deep Learning', 'Tutorial'], date: '2024-10-06', popularity: 92, image: '🧠' },
+      { id: 9, title: 'The Human Microbiome', topic: 'Science', readTime: 10, views: 14000, tags: ['Biology', 'Health', 'Research'], date: '2024-10-04', popularity: 87, image: '🔬' },
+      { id: 10, title: 'Renewable Energy Economics', topic: 'Environment', readTime: 8, views: 11000, tags: ['Economics', 'Energy', 'Policy'], date: '2024-10-03', popularity: 85, image: '💡' },
+    ]
+  };
+
+  // Collaborative Filtering Algorithm
+  const collaborativeFiltering = (items, userInteractions, type) => {
+    return items.map(item => {
+      let score = item.popularity || 0;
+      
+      // Boost score if similar to user's preferences
+      if (type === 'movies') {
+        const genreMatch = userProfile.movies.genres.includes(item.genre);
+        score += genreMatch ? 20 : 0;
+        
+        // Check if director has other highly rated movies by user
+        const directorBonus = items.filter(m => 
+          m.director === item.director && userProfile.movies.ratings[m.id] >= 4
+        ).length * 10;
+        score += directorBonus;
+      } else if (type === 'products') {
+        const categoryMatch = userProfile.products.categories.includes(item.category);
+        score += categoryMatch ? 20 : 0;
+        score += (item.rating * 5);
+      } else if (type === 'articles') {
+        const topicMatch = userProfile.articles.topics.includes(item.topic);
+        score += topicMatch ? 20 : 0;
+        score += (item.views / 1000);
+      }
+      
+      return { ...item, recommendScore: score };
+    });
+  };
+
+  // Content-Based Filtering Algorithm
+  const contentBasedFiltering = (items, userInteractions, type) => {
+    return items.map(item => {
+      let score = 0;
+      
+      if (type === 'movies') {
+        // Score based on genre match
+        const genreScore = userProfile.movies.genres.includes(item.genre) ? 50 : 0;
+        
+        // Score based on tags overlap
+        const tagScore = item.tags.filter(tag => {
+          return items.filter(m => 
+            userProfile.movies.ratings[m.id] >= 4 && m.tags.includes(tag)
+          ).length > 0;
+        }).length * 10;
+        
+        score = genreScore + tagScore + (item.rating * 10);
+        
+      } else if (type === 'products') {
+        const categoryScore = userProfile.products.categories.includes(item.category) ? 50 : 0;
+        const tagScore = item.tags.filter(tag => {
+          return items.filter(p => 
+            userProfile.products.likes[p.id] && p.tags.includes(tag)
+          ).length > 0;
+        }).length * 10;
+        
+        score = categoryScore + tagScore + (item.rating * 8);
+        
+      } else if (type === 'articles') {
+        const topicScore = userProfile.articles.topics.includes(item.topic) ? 50 : 0;
+        const tagScore = item.tags.filter(tag => {
+          return items.filter(a => 
+            userProfile.articles.reads.includes(a.id) && a.tags.includes(tag)
+          ).length > 0;
+        }).length * 10;
+        
+        score = topicScore + tagScore + (item.views / 500);
+      }
+      
+      return { ...item, recommendScore: score };
+    });
+  };
+
+  // Hybrid Recommendation
+  const hybridRecommendation = (items, type) => {
+    const collaborative = collaborativeFiltering(items, null, type);
+    const contentBased = contentBasedFiltering(items, null, type);
+    
+    return items.map((item, idx) => ({
+      ...item,
+      recommendScore: (collaborative[idx].recommendScore * 0.6) + (contentBased[idx].recommendScore * 0.4)
+    }));
+  };
+
+  // Generate recommendations
+  const recommendations = useMemo(() => {
+    let items = dataset[activeTab];
+    let filtered;
+    
+    if (recommendationMethod === 'collaborative') {
+      filtered = collaborativeFiltering(items, null, activeTab);
+    } else if (recommendationMethod === 'content') {
+      filtered = contentBasedFiltering(items, null, activeTab);
+    } else {
+      filtered = hybridRecommendation(items, activeTab);
+    }
+    
+    return filtered
+      .filter(item => {
+        if (activeTab === 'movies') return !userProfile.movies.watched.includes(item.id);
+        if (activeTab === 'products') return !userProfile.products.purchases.includes(item.id);
+        if (activeTab === 'articles') return !userProfile.articles.reads.includes(item.id);
+        return true;
+      })
+      .sort((a, b) => b.recommendScore - a.recommendScore)
+      .slice(0, 6);
+  }, [activeTab, userProfile, recommendationMethod]);
+
+  // Handle user interaction
+  const handleInteraction = (itemId, action) => {
+    setUserProfile(prev => {
+      const updated = { ...prev };
+      if (activeTab === 'movies') {
+        if (action === 'watch') {
+          updated.movies.watched.push(itemId);
+        } else if (action === 'rate') {
+          updated.movies.ratings[itemId] = 5;
+        }
+      } else if (activeTab === 'products') {
+        if (action === 'purchase') {
+          updated.products.purchases.push(itemId);
+        } else if (action === 'like') {
+          updated.products.likes[itemId] = true;
+        }
+      } else if (activeTab === 'articles') {
+        if (action === 'read') {
+          updated.articles.reads.push(itemId);
+        }
+      }
+      return updated;
+    });
+  };
+
+  const getMatchScore = (score) => {
+    const percentage = Math.min(100, (score / 150) * 100);
+    return percentage.toFixed(0);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
+          <div className="flex items-center gap-3 mb-2">
+            <Sparkles className="w-8 h-8 text-yellow-400" />
+            <h1 className="text-3xl font-bold text-white">AI Recommendation Engine</h1>
+          </div>
+          <p className="text-purple-200">Personalized suggestions powered by machine learning algorithms</p>
+        </div>
+
+        {/* Algorithm Selector */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 mb-6 border border-white/20">
+          <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+            <Filter className="w-5 h-5" />
+            Recommendation Algorithm
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <button
+              onClick={() => setRecommendationMethod('collaborative')}
+              className={`p-4 rounded-lg transition-all ${
+                recommendationMethod === 'collaborative'
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/50'
+                  : 'bg-white/5 text-blue-200 hover:bg-white/10'
+              }`}
+            >
+              <Users className="w-6 h-6 mx-auto mb-2" />
+              <div className="font-semibold">Collaborative Filtering</div>
+              <div className="text-xs mt-1 opacity-80">Based on similar users</div>
+            </button>
+            <button
+              onClick={() => setRecommendationMethod('content')}
+              className={`p-4 rounded-lg transition-all ${
+                recommendationMethod === 'content'
+                  ? 'bg-green-600 text-white shadow-lg shadow-green-500/50'
+                  : 'bg-white/5 text-green-200 hover:bg-white/10'
+              }`}
+            >
+              <BookOpen className="w-6 h-6 mx-auto mb-2" />
+              <div className="font-semibold">Content-Based</div>
+              <div className="text-xs mt-1 opacity-80">Based on item features</div>
+            </button>
+            <button
+              onClick={() => setRecommendationMethod('hybrid')}
+              className={`p-4 rounded-lg transition-all ${
+                recommendationMethod === 'hybrid'
+                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50'
+                  : 'bg-white/5 text-purple-200 hover:bg-white/10'
+              }`}
+            >
+              <TrendingUp className="w-6 h-6 mx-auto mb-2" />
+              <div className="font-semibold">Hybrid Model</div>
+              <div className="text-xs mt-1 opacity-80">Best of both worlds</div>
+            </button>
+          </div>
+        </div>
+
+        {/* Category Tabs */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-2 mb-6 border border-white/20 flex gap-2">
+          <button
+            onClick={() => setActiveTab('movies')}
+            className={`flex-1 py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'movies' ? 'bg-purple-600 text-white' : 'text-purple-200 hover:bg-white/5'
+            }`}
+          >
+            <Play className="w-5 h-5" />
+            Movies
+          </button>
+          <button
+            onClick={() => setActiveTab('products')}
+            className={`flex-1 py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'products' ? 'bg-purple-600 text-white' : 'text-purple-200 hover:bg-white/5'
+            }`}
+          >
+            <ShoppingCart className="w-5 h-5" />
+            Products
+          </button>
+          <button
+            onClick={() => setActiveTab('articles')}
+            className={`flex-1 py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'articles' ? 'bg-purple-600 text-white' : 'text-purple-200 hover:bg-white/5'
+            }`}
+          >
+            <BookOpen className="w-5 h-5" />
+            Articles
+          </button>
+        </div>
+
+        {/* User Preferences */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 mb-6 border border-white/20">
+          <h3 className="text-white font-semibold mb-4">Your Preferences</h3>
+          <div className="flex flex-wrap gap-2">
+            {activeTab === 'movies' && userProfile.movies.genres.map(genre => (
+              <span key={genre} className="bg-purple-500/30 text-purple-200 px-3 py-1 rounded-full text-sm">
+                {genre}
+              </span>
+            ))}
+            {activeTab === 'products' && userProfile.products.categories.map(cat => (
+              <span key={cat} className="bg-blue-500/30 text-blue-200 px-3 py-1 rounded-full text-sm">
+                {cat}
+              </span>
+            ))}
+            {activeTab === 'articles' && userProfile.articles.topics.map(topic => (
+              <span key={topic} className="bg-green-500/30 text-green-200 px-3 py-1 rounded-full text-sm">
+                {topic}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Recommendations Grid */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+            <Sparkles className="w-6 h-6 text-yellow-400" />
+            Recommended For You
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {recommendations.map(item => (
+              <div key={item.id} className="bg-white/10 backdrop-blur-lg rounded-xl overflow-hidden border border-white/20 hover:border-purple-400/50 transition-all hover:scale-105">
+                <div className="p-6">
+                  <div className="text-6xl mb-4 text-center">{item.image}</div>
+                  
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="text-white font-semibold text-lg flex-1">
+                      {activeTab === 'movies' ? item.title : activeTab === 'products' ? item.name : item.title}
+                    </h3>
+                  </div>
+
+                  {/* Match Score */}
+                  <div className="mb-3">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs text-purple-300">Match Score</span>
+                      <span className="text-xs text-white font-semibold">{getMatchScore(item.recommendScore)}%</span>
+                    </div>
+                    <div className="bg-white/10 rounded-full h-2 overflow-hidden">
+                      <div 
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all"
+                        style={{ width: `${getMatchScore(item.recommendScore)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 mb-4">
+                    {activeTab === 'movies' && (
+                      <>
+                        <div className="flex items-center gap-2 text-sm text-purple-200">
+                          <span className="bg-purple-500/20 px-2 py-1 rounded">{item.genre}</span>
+                          <span className="flex items-center gap-1">
+                            <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                            {item.rating}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-300">{item.year} • {item.director}</div>
+                      </>
+                    )}
+                    {activeTab === 'products' && (
+                      <>
+                        <div className="flex items-center gap-2 text-sm text-blue-200">
+                          <span className="bg-blue-500/20 px-2 py-1 rounded">{item.category}</span>
+                          <span className="flex items-center gap-1">
+                            <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                            {item.rating}
+                          </span>
+                        </div>
+                        <div className="text-lg font-bold text-white">${item.price}</div>
+                      </>
+                    )}
+                    {activeTab === 'articles' && (
+                      <>
+                        <div className="flex items-center gap-2 text-sm text-green-200">
+                          <span className="bg-green-500/20 px-2 py-1 rounded">{item.topic}</span>
+                          <span>{item.readTime} min read</span>
+                        </div>
+                        <div className="text-xs text-gray-300">{item.views.toLocaleString()} views</div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-1 mb-4">
+                    {item.tags.slice(0, 3).map(tag => (
+                      <span key={tag} className="bg-white/10 text-xs text-white px-2 py-1 rounded">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    {activeTab === 'movies' && (
+                      <>
+                        <button
+                          onClick={() => handleInteraction(item.id, 'watch')}
+                          className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Play className="w-4 h-4" />
+                          Watch
+                        </button>
+                        <button
+                          onClick={() => handleInteraction(item.id, 'rate')}
+                          className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-lg transition-colors"
+                        >
+                          <ThumbsUp className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
+                    {activeTab === 'products' && (
+                      <>
+                        <button
+                          onClick={() => handleInteraction(item.id, 'purchase')}
+                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          Buy Now
+                        </button>
+                        <button
+                          onClick={() => handleInteraction(item.id, 'like')}
+                          className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-lg transition-colors"
+                        >
+                          <Heart className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
+                    {activeTab === 'articles' && (
+                      <button
+                        onClick={() => handleInteraction(item.id, 'read')}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                      >
+                        <BookOpen className="w-4 h-4" />
+                        Read Article
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Info Panel */}
+        <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 backdrop-blur-lg rounded-xl p-6 border border-blue-400/30">
+          <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-yellow-400" />
+            How It Works
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-200">
+            <div>
+              <div className="text-blue-400 font-semibold mb-1">Collaborative Filtering</div>
+              Finds patterns in user behavior to recommend items liked by similar users. Great for discovering new content based on collective preferences.
+            </div>
+            <div>
+              <div className="text-green-400 font-semibold mb-1">Content-Based Filtering</div>
+              Analyzes item attributes and tags to find similar content. Recommends based on what you've previously enjoyed with similar characteristics.
+            </div>
+            <div>
+              <div className="text-purple-400 font-semibold mb-1">Hybrid Model</div>
+              Combines both approaches for optimal results. Balances personalization with discovery to provide the most relevant recommendations.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default RecommendationSystem;
