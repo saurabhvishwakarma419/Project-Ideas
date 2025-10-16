@@ -1,1 +1,387 @@
+import React, { useState, useMemo } from 'react';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, AreaChart, Area, ScatterChart, Scatter, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
+import { TrendingUp, Users, DollarSign, ShoppingCart, Filter, Download, Calendar, Globe, Activity, Zap } from 'lucide-react';
 
+const DataVisualizationDashboard = () => {
+  const [dateRange, setDateRange] = useState('30');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedMetric, setSelectedMetric] = useState('revenue');
+
+  // Generate comprehensive dataset
+  const generateData = () => {
+    const categories = ['Electronics', 'Clothing', 'Food', 'Books', 'Sports'];
+    const regions = ['North', 'South', 'East', 'West'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    // Time series data
+    const timeSeriesData = months.map((month, idx) => ({
+      month,
+      revenue: 45000 + Math.random() * 25000 + idx * 2000,
+      users: 1200 + Math.random() * 400 + idx * 50,
+      orders: 850 + Math.random() * 250 + idx * 30,
+      avgOrder: 50 + Math.random() * 30,
+    }));
+
+    // Category performance
+    const categoryData = categories.map(cat => ({
+      name: cat,
+      value: Math.floor(Math.random() * 50000) + 20000,
+      growth: (Math.random() * 30 - 5).toFixed(1),
+      orders: Math.floor(Math.random() * 500) + 200,
+    }));
+
+    // Regional data
+    const regionalData = regions.map(region => ({
+      region,
+      revenue: Math.floor(Math.random() * 100000) + 50000,
+      customers: Math.floor(Math.random() * 5000) + 2000,
+      satisfaction: (Math.random() * 20 + 75).toFixed(1),
+    }));
+
+    // Customer segments
+    const segmentData = [
+      { segment: 'Premium', customers: 1250, revenue: 125000, avgSpend: 100 },
+      { segment: 'Regular', customers: 3500, revenue: 175000, avgSpend: 50 },
+      { segment: 'Occasional', customers: 5200, revenue: 104000, avgSpend: 20 },
+      { segment: 'New', customers: 2100, revenue: 42000, avgSpend: 20 },
+    ];
+
+    // Performance metrics radar
+    const performanceData = [
+      { metric: 'Sales', value: 85 },
+      { metric: 'Customer Satisfaction', value: 92 },
+      { metric: 'Delivery Speed', value: 78 },
+      { metric: 'Product Quality', value: 88 },
+      { metric: 'Support', value: 91 },
+      { metric: 'User Experience', value: 86 },
+    ];
+
+    // Hourly traffic
+    const hourlyData = Array.from({ length: 24 }, (_, i) => ({
+      hour: `${i}:00`,
+      traffic: Math.floor(Math.random() * 500) + 100 + (i >= 9 && i <= 17 ? 300 : 0),
+      conversions: Math.floor(Math.random() * 50) + 10 + (i >= 9 && i <= 17 ? 30 : 0),
+    }));
+
+    return {
+      timeSeriesData,
+      categoryData,
+      regionalData,
+      segmentData,
+      performanceData,
+      hourlyData,
+    };
+  };
+
+  const data = useMemo(() => generateData(), [dateRange]);
+
+  // Calculate KPIs
+  const kpis = useMemo(() => {
+    const totalRevenue = data.timeSeriesData.reduce((sum, d) => sum + d.revenue, 0);
+    const totalUsers = data.timeSeriesData.reduce((sum, d) => sum + d.users, 0);
+    const totalOrders = data.timeSeriesData.reduce((sum, d) => sum + d.orders, 0);
+    const avgOrderValue = totalRevenue / totalOrders;
+
+    const revenueGrowth = ((data.timeSeriesData[data.timeSeriesData.length - 1].revenue - 
+                            data.timeSeriesData[0].revenue) / data.timeSeriesData[0].revenue * 100).toFixed(1);
+
+    return {
+      totalRevenue: (totalRevenue / 1000).toFixed(0),
+      totalUsers: totalUsers.toFixed(0),
+      totalOrders: totalOrders.toFixed(0),
+      avgOrderValue: avgOrderValue.toFixed(2),
+      revenueGrowth,
+    };
+  }, [data]);
+
+  const COLORS = ['#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#ef4444'];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <Activity className="w-8 h-8 text-purple-400" />
+                <h1 className="text-3xl font-bold text-white">Analytics Dashboard</h1>
+              </div>
+              <p className="text-purple-200">Real-time business intelligence and insights</p>
+            </div>
+            <div className="flex gap-3">
+              <select 
+                value={dateRange}
+                onChange={(e) => setDateRange(e.target.value)}
+                className="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white backdrop-blur-lg"
+              >
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+                <option value="90">Last 90 days</option>
+                <option value="365">Last year</option>
+              </select>
+              <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                <Download className="w-4 h-4" />
+                Export
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 backdrop-blur-lg rounded-xl p-6 border border-purple-400/30">
+            <div className="flex justify-between items-start mb-4">
+              <div className="bg-purple-500/20 p-3 rounded-lg">
+                <DollarSign className="w-6 h-6 text-purple-300" />
+              </div>
+              <span className="text-green-400 text-sm font-semibold">+{kpis.revenueGrowth}%</span>
+            </div>
+            <div className="text-2xl font-bold text-white mb-1">${kpis.totalRevenue}K</div>
+            <div className="text-purple-200 text-sm">Total Revenue</div>
+          </div>
+
+          <div className="bg-gradient-to-br from-pink-500/20 to-pink-600/20 backdrop-blur-lg rounded-xl p-6 border border-pink-400/30">
+            <div className="flex justify-between items-start mb-4">
+              <div className="bg-pink-500/20 p-3 rounded-lg">
+                <Users className="w-6 h-6 text-pink-300" />
+              </div>
+              <span className="text-green-400 text-sm font-semibold">+12.5%</span>
+            </div>
+            <div className="text-2xl font-bold text-white mb-1">{kpis.totalUsers}</div>
+            <div className="text-pink-200 text-sm">Total Users</div>
+          </div>
+
+          <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 backdrop-blur-lg rounded-xl p-6 border border-blue-400/30">
+            <div className="flex justify-between items-start mb-4">
+              <div className="bg-blue-500/20 p-3 rounded-lg">
+                <ShoppingCart className="w-6 h-6 text-blue-300" />
+              </div>
+              <span className="text-green-400 text-sm font-semibold">+8.3%</span>
+            </div>
+            <div className="text-2xl font-bold text-white mb-1">{kpis.totalOrders}</div>
+            <div className="text-blue-200 text-sm">Total Orders</div>
+          </div>
+
+          <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 backdrop-blur-lg rounded-xl p-6 border border-green-400/30">
+            <div className="flex justify-between items-start mb-4">
+              <div className="bg-green-500/20 p-3 rounded-lg">
+                <TrendingUp className="w-6 h-6 text-green-300" />
+              </div>
+              <span className="text-green-400 text-sm font-semibold">+5.7%</span>
+            </div>
+            <div className="text-2xl font-bold text-white mb-1">${kpis.avgOrderValue}</div>
+            <div className="text-green-200 text-sm">Avg Order Value</div>
+          </div>
+        </div>
+
+        {/* Main Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Revenue Trend */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+            <h3 className="text-xl font-semibold text-white mb-4">Revenue Trend</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={data.timeSeriesData}>
+                <defs>
+                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
+                <XAxis dataKey="month" stroke="#ffffff60" />
+                <YAxis stroke="#ffffff60" />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#1e1e1e', border: '1px solid #444', borderRadius: '8px' }}
+                  labelStyle={{ color: '#fff' }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="revenue" 
+                  stroke="#8b5cf6" 
+                  fillOpacity={1}
+                  fill="url(#colorRevenue)"
+                  strokeWidth={3}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Category Performance */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+            <h3 className="text-xl font-semibold text-white mb-4">Category Performance</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={data.categoryData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
+                <XAxis dataKey="name" stroke="#ffffff60" />
+                <YAxis stroke="#ffffff60" />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#1e1e1e', border: '1px solid #444', borderRadius: '8px' }}
+                  labelStyle={{ color: '#fff' }}
+                />
+                <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                  {data.categoryData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Second Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Regional Distribution */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+            <h3 className="text-xl font-semibold text-white mb-4">Regional Sales</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={data.regionalData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ region, percent }) => `${region} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="revenue"
+                >
+                  {data.regionalData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#1e1e1e', border: '1px solid #444', borderRadius: '8px' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Performance Radar */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+            <h3 className="text-xl font-semibold text-white mb-4">Performance Metrics</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <RadarChart data={data.performanceData}>
+                <PolarGrid stroke="#ffffff30" />
+                <PolarAngleAxis dataKey="metric" stroke="#ffffff80" tick={{ fill: '#fff', fontSize: 12 }} />
+                <PolarRadiusAxis stroke="#ffffff30" />
+                <Radar name="Score" dataKey="value" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.6} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#1e1e1e', border: '1px solid #444', borderRadius: '8px' }}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Customer Segments */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+            <h3 className="text-xl font-semibold text-white mb-4">Customer Segments</h3>
+            <div className="space-y-4">
+              {data.segmentData.map((segment, idx) => (
+                <div key={idx} className="bg-white/5 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-white font-semibold">{segment.segment}</span>
+                    <span className="text-purple-300">${(segment.revenue / 1000).toFixed(0)}K</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-gray-300">
+                    <span>{segment.customers.toLocaleString()} customers</span>
+                    <span>${segment.avgSpend} avg</span>
+                  </div>
+                  <div className="mt-2 bg-white/10 rounded-full h-2 overflow-hidden">
+                    <div 
+                      className="h-full rounded-full"
+                      style={{ 
+                        width: `${(segment.revenue / 175000) * 100}%`,
+                        backgroundColor: COLORS[idx]
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Hourly Traffic */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+            <h3 className="text-xl font-semibold text-white mb-4">24-Hour Traffic Pattern</h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={data.hourlyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
+                <XAxis 
+                  dataKey="hour" 
+                  stroke="#ffffff60"
+                  interval={3}
+                />
+                <YAxis stroke="#ffffff60" />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#1e1e1e', border: '1px solid #444', borderRadius: '8px' }}
+                  labelStyle={{ color: '#fff' }}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="traffic" stroke="#10b981" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="conversions" stroke="#f59e0b" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Customer Analytics Scatter */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+            <h3 className="text-xl font-semibold text-white mb-4">Customer Value Analysis</h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <ScatterChart>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
+                <XAxis 
+                  dataKey="customers" 
+                  name="Customers"
+                  stroke="#ffffff60"
+                  label={{ value: 'Number of Customers', position: 'insideBottom', offset: -5, fill: '#fff' }}
+                />
+                <YAxis 
+                  dataKey="avgSpend" 
+                  name="Avg Spend"
+                  stroke="#ffffff60"
+                  label={{ value: 'Average Spend ($)', angle: -90, position: 'insideLeft', fill: '#fff' }}
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#1e1e1e', border: '1px solid #444', borderRadius: '8px' }}
+                  cursor={{ strokeDasharray: '3 3' }}
+                />
+                <Scatter data={data.segmentData} fill="#ec4899">
+                  {data.segmentData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Scatter>
+              </ScatterChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Insights Panel */}
+        <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 backdrop-blur-lg rounded-xl p-6 border border-blue-400/30">
+          <div className="flex items-start gap-3">
+            <Zap className="w-6 h-6 text-yellow-400 flex-shrink-0 mt-1" />
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-2">Key Insights</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-200">
+                <div>
+                  <span className="text-green-400 font-semibold">↑ Revenue Growth:</span> Strong {kpis.revenueGrowth}% increase in the selected period, driven by premium customer segment.
+                </div>
+                <div>
+                  <span className="text-blue-400 font-semibold">⏰ Peak Hours:</span> Traffic peaks between 9 AM - 5 PM with highest conversion rates at 2 PM.
+                </div>
+                <div>
+                  <span className="text-purple-400 font-semibold">🎯 Top Category:</span> {data.categoryData[0].name} leads with ${(data.categoryData[0].value / 1000).toFixed(0)}K in sales.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DataVisualizationDashboard;
